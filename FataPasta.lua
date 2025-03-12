@@ -1,6 +1,6 @@
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/FakeAngles/PasteWare/refs/heads/main/linoralib.lua"))()
-local ThemeManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/FakeAngles/PasteWare/refs/heads/main/manage2.lua"))()
-local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/FakeAngles/PasteWare/refs/heads/main/manager.lua"))()
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Alowyyy1/FataPaste/refs/heads/libra/linoralib.lua"))()
+local ThemeManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/Alowyyy1/FataPaste/refs/heads/libra/manage2.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/Alowyyy1/FataPaste/refs/heads/libra/manager.lua"))()
 
 Library.KeybindFrame.Visible = false
 
@@ -116,7 +116,7 @@ local AimGroup = AimTab:AddLeftGroupbox("Aim Settings")
 -- Добавляем кнопку для загрузки и выполнения скрипта SilentAim
 AimGroup:AddButton("Inject SilentAim", function()
     local success, result = pcall(function()
-        local script = game:HttpGet("https://raw.githubusercontent.com/Alowyyy1/margancovka/refs/heads/main/silent.lua")
+        local script = game:HttpGet("https://raw.githubusercontent.com/Alowyyy1/FataPaste/refs/heads/main/silent.lua")
         loadstring(script)()
     end)
     
