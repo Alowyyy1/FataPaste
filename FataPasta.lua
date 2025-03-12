@@ -2,7 +2,7 @@ local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Alowy
 local ThemeManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/Alowyyy1/FataPaste/refs/heads/libra/manage2.lua"))()
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/Alowyyy1/FataPaste/refs/heads/libra/manager.lua"))()
 
-Library.KeybindFrame.Visible = false
+Library.KeybindFrame.Visible = true
 
 -- Глобальные настройки
 getgenv().WarTycoon = false
@@ -100,6 +100,105 @@ local function modifyWeaponSettings(property, value)
     end
 end
 
+-- Управление ESP
+local localPlayer = game:GetService("Players").LocalPlayer
+local chamsEnabled = false
+local chamsObjects = {}
+local connections = {
+    playerAdded = nil,
+    playerRemoving = nil,
+    characterAdded = {}
+}
+
+local function manageChams(player, action)
+    if player == localPlayer then return end
+    
+    if action == "add" then
+        if chamsObjects[player] then
+            manageChams(player, "remove")
+        end
+        
+        local function processCharacter(character)
+            chamsObjects[player] = {}
+            
+            for _, part in ipairs(character:GetChildren()) do
+                if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+                    local adornment = Instance.new("BoxHandleAdornment")
+                    adornment.Name = "ChamsAdornment"
+                    adornment.Size = part.Size + Vector3.new(0.05, 0.05, 0.05)
+                    adornment.AlwaysOnTop = true
+                    adornment.ZIndex = 10
+                    adornment.Adornee = part
+                    adornment.Color3 = player.Team and player.Team.TeamColor.Color or Color3.new(1, 0.2, 0.2)
+                    adornment.Transparency = 0.35
+                    adornment.Parent = part
+                    
+                    table.insert(chamsObjects[player], adornment)
+                end
+            end
+            
+            connections.characterAdded[player] = character.ChildAdded:Connect(function(child)
+                if child:IsA("BasePart") then
+                    manageChams(player, "add")
+                end
+            end)
+        end
+        
+        if player.Character then
+            processCharacter(player.Character)
+        end
+        
+        connections.characterAdded[player] = player.CharacterAdded:Connect(processCharacter)
+        
+    elseif action == "remove" then
+        if chamsObjects[player] then
+            for _, adornment in ipairs(chamsObjects[player]) do
+                pcall(function() adornment:Destroy() end)
+            end
+            chamsObjects[player] = nil
+        end
+        
+        if connections.characterAdded[player] then
+            connections.characterAdded[player]:Disconnect()
+            connections.characterAdded[player] = nil
+        end
+    end
+end
+
+local function toggleChams(state)
+    chamsEnabled = state
+    
+    if state then
+        connections.playerAdded = game.Players.PlayerAdded:Connect(function(player)
+            manageChams(player, "add")
+        end)
+        
+        connections.playerRemoving = game.Players.PlayerRemoving:Connect(function(player)
+            manageChams(player, "remove")
+        end)
+        
+        for _, player in ipairs(game.Players:GetPlayers()) do
+            if player ~= localPlayer then
+                manageChams(player, "add")
+            end
+        end
+    else
+        for player, _ in pairs(chamsObjects) do
+            manageChams(player, "remove")
+        end
+
+        if connections.playerAdded then
+            connections.playerAdded:Disconnect()
+            connections.playerAdded = nil
+        end
+        
+        if connections.playerRemoving then
+            connections.playerRemoving:Disconnect()
+            connections.playerRemoving = nil
+        end
+    end
+end
+
 -- Интерфейс
 local Window = Library:CreateWindow({
     Title = 'FataPasta  |  github.com/Alowyyy1',
@@ -109,26 +208,30 @@ local Window = Library:CreateWindow({
     MenuFadeTime = 0.2
 })
 
--- Вкладка Aim
-local AimTab = Window:AddTab("Aim")
-local AimGroup = AimTab:AddLeftGroupbox("Aim Settings")
+-- Main
+local WallhackTab = Window:AddTab("Main")
+local WallhackGroup = WallhackTab:AddLeftGroupbox("Player ESP")
 
--- Добавляем кнопку для загрузки и выполнения скрипта SilentAim
-AimGroup:AddButton("Inject SilentAim", function()
-    local success, result = pcall(function()
-        local script = game:HttpGet("https://raw.githubusercontent.com/Alowyyy1/FataPaste/refs/heads/main/silent.lua")
-        loadstring(script)()
-    end)
-    
-    if not success then
-        warn("Ошибка при загрузке SilentAim: " .. tostring(result))
-    else
-        print("SilentAim успешно загружен и выполнен!")
+WallhackGroup:AddToggle("ChamsToggle", {
+    Text = "Enable Player ESP",
+    Default = false,
+    Callback = function(state)
+        toggleChams(state)
     end
+}):AddKeyPicker("ChamsToggle_KeyPicker", {
+    Default = "RightAlt",
+    SyncToggleState = true,
+    Mode = "Toggle",
+    Text = "Wall Hack Key",
+    NoUI = false
+})
+
+Options.ChamsToggle_KeyPicker:OnClick(function()
+    Options.ChamsToggle:SetValue(not Options.ChamsToggle.Value)
 end)
 
--- Вкладка Main
-local MainTab = Window:AddTab("Main")
+-- Вкладка Other
+local MainTab = Window:AddTab("Other")
 
 -- Левая колонка: Camera Settings
 local CameraGroup = MainTab:AddLeftGroupbox("Camera Settings")
@@ -208,6 +311,37 @@ local bulletCountInput = ACSGroup:AddInput("BulletCountInput", {
 
 ACSGroup:AddButton('MULTI BULLETS', function()
     modifyWeaponSettings("Bullets", tonumber(bulletCountInput.Value) or 50)
+end)
+
+-- Правая колонка: Player Protection
+local ProtectionGroup = MainTab:AddRightGroupbox("Player Protection")
+
+-- Поле ввода для кастомного имени
+local nameInput = ProtectionGroup:AddInput("NameInput", {
+    Text = "Enter New Name",
+    Default = "Protected",
+    Numeric = false, -- Разрешаем текст
+})
+
+-- Кнопка изменения имени
+ProtectionGroup:AddButton('Change Name', function()
+    local player = game:GetService("Players").LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    
+    if character and character:FindFirstChild("Head") then
+        local head = character.Head
+        local nameTag = head:FindFirstChild("NameTag")
+        
+        if nameTag then
+            local newName = nameInput.Value -- Берём текст из поля ввода
+            if nameTag:FindFirstChild("DisplayName") then
+                nameTag.DisplayName.Text = newName
+            end
+            if nameTag:FindFirstChild("Username") then
+                nameTag.Username.Text = newName
+            end
+        end
+    end
 end)
 
 -- Вкладка Settings
