@@ -2,6 +2,9 @@ local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Alowy
 local ThemeManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/Alowyyy1/FataPaste/refs/heads/libra/manage2.lua"))()
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/Alowyyy1/FataPaste/refs/heads/libra/manager.lua"))()
 
+local Yield = loadstring(game:HttpGet("https://raw.githubusercontent.com/edgeiy/infiniteyield/master/source"))
+local Dex = loadstring(game:HttpGet("https://raw.githubusercontent.com/dyyll/Dex-V5-leak/refs/heads/main/Dex%20V5.lua"))
+
 Library.KeybindFrame.Visible = true
 
 -- Глобальные настройки
@@ -209,7 +212,7 @@ local Window = Library:CreateWindow({
 })
 
 -- Main
-local WallhackTab = Window:AddTab("Main")
+local WallhackTab = Window:AddTab("Main(Soon More)")
 local WallhackGroup = WallhackTab:AddLeftGroupbox("Player ESP")
 
 WallhackGroup:AddToggle("ChamsToggle", {
@@ -258,11 +261,21 @@ CameraGroup:AddSlider("FOVSlider", {
     end
 })
 
+-- Леваяя колонка: Scripts
+local ScriptsGroup = MainTab:AddLeftGroupbox("Scripts")
+ScriptsGroup:AddButton('Infinite Yield', function()
+    Yield()
+end)
+
+ScriptsGroup:AddButton('Dex', function()
+    Dex()
+end)
+
 -- Правая колонка: Advanced Combat System
 local ACSGroup = MainTab:AddRightGroupbox("[ACS] Advanced Combat System")
 
 ACSGroup:AddToggle("WarTycoonToggle", {
-    Text = "War Tycoon Mode",
+    Text = "War Tycoon",
     Default = false,
     Callback = function(state)
         getgenv().WarTycoon = state
@@ -270,56 +283,56 @@ ACSGroup:AddToggle("WarTycoonToggle", {
 })
 
 ACSGroup:AddToggle("WeaponHandsToggle", {
-    Text = "Weapon In Hands",
+    Text = "Apply Only For Weapon In Hands",
     Default = false,
     Callback = function(state)
         getgenv().WeaponOnHands = state
     end
 })
 
-ACSGroup:AddButton('INF AMMO', function()
+ACSGroup:AddButton('Infinite Ammo (9999)', function()
     modifyWeaponSettings("Ammo", 9999)
     modifyWeaponSettings("ClipSize", 999)
 end)
 
-ACSGroup:AddButton('NO RECOIL | NO SPREAD', function()
+ACSGroup:AddButton('Turn Off Recoil and Spread', function()
     modifyWeaponSettings("VRecoil", 0.01)
     modifyWeaponSettings("HRecoil", 0.01)
     modifyWeaponSettings("MinSpread", 0.01)
     modifyWeaponSettings("MaxSpread", 0.01)
 end)
 
-ACSGroup:AddButton('INF BULLET DISTANCE', function()
+ACSGroup:AddButton('Set Infinite Bullet Distance', function()
     modifyWeaponSettings("Distance", 9999)
 end)
 
 local fireRateInput = ACSGroup:AddInput("FireRateInput", {
-    Text = "Fire Rate",
-    Default = "888",
+    Text = "FireRate(It may not work properly)",
+    Default = "60",
     Numeric = true
 })
 
-ACSGroup:AddButton('CHANGE FIRE RATE', function()
+ACSGroup:AddButton('Set Fire Rate', function()
     modifyWeaponSettings("FireRate", math.max(tonumber(fireRateInput.Value) or 60, 60))
 end)
 
 local bulletCountInput = ACSGroup:AddInput("BulletCountInput", {
-    Text = "Bullet Count",
-    Default = "50",
+    Text = "BulletCount(It may not work properly)",
+    Default = "1",
     Numeric = true
 })
 
-ACSGroup:AddButton('MULTI BULLETS', function()
+ACSGroup:AddButton('Set Bullet Count', function()
     modifyWeaponSettings("Bullets", tonumber(bulletCountInput.Value) or 50)
 end)
 
--- Правая колонка: Player Protection
-local ProtectionGroup = MainTab:AddRightGroupbox("Player Protection")
+-- Леваяя колонка: Player Protection
+local ProtectionGroup = MainTab:AddLeftGroupbox("Player Protection")
 
 -- Поле ввода для кастомного имени
 local nameInput = ProtectionGroup:AddInput("NameInput", {
-    Text = "Enter New Name",
-    Default = "Protected",
+    Text = "Enter the name you want to set",
+    Default = "@Protected",
     Numeric = false, -- Разрешаем текст
 })
 
@@ -346,6 +359,27 @@ end)
 
 -- Вкладка Settings
 local settingsTab = Window:AddTab("Settings")
+
+-- Группа для настроек интерфейса
+local InterfaceGroup = settingsTab:AddLeftGroupbox("Interface Settings")
+
+-- Переключатель для отображения KeyBinds
+InterfaceGroup:AddToggle("KeybindToggle", {
+    Text = "Show KeyBinds Menu",
+    Default = true, -- По умолчанию включено
+    Callback = function(state)
+        Library.KeybindFrame.Visible = state
+    end
+})
+
+-- Инициализация видимости KeyBinds
+if Options and Options.KeybindToggle then
+    Library.KeybindFrame.Visible = Options.KeybindToggle.Value
+else
+    warn("Options or Options.KeybindToggle is nil")
+end
+
+-- Применение тем и сохранение настроек
 ThemeManager:SetLibrary(Library)
 SaveManager:SetLibrary(Library)
 ThemeManager:ApplyToTab(settingsTab)
