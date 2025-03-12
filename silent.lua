@@ -10,7 +10,7 @@ end
 local SilentAimSettings = {
     Enabled = false,
     
-    ClassName = "Silent Aim - Menu Activation Key: RightAlt",
+    ClassName = "Universal Silent Aim - Averiias, Stefanuk12, xaxa",
     ToggleKey = "RightAlt",
     
     TeamCheck = false,
@@ -29,7 +29,7 @@ local SilentAimSettings = {
 
 -- variables
 getgenv().SilentAimSettings = Settings
-local MainFileName = "Silent Aim - Menu Activation Key: RightAlt"
+local MainFileName = "UniversalSilentAim"
 local SelectedFile, FileToSave = "", ""
 
 local Camera = workspace.CurrentCamera
